@@ -1,7 +1,4 @@
-from tokenizer.event import Event
-
-
-class TokenizedEvent(Event):
+class TokenizedEvent:
     def __init__(self, ts: float, source: str, filename: str):
         self.ts = ts
         self.source = source

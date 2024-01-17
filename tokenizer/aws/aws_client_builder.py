@@ -12,7 +12,7 @@ class AwsClientBuilder:
         self.region = None
 
     def for_service(self, service: AwsService):
-        self.service = service
+        self.service = service.value
         return self
 
     def with_access_key(self, access_key: str):
@@ -23,12 +23,12 @@ class AwsClientBuilder:
         self.secret_key = secret_key
         return self
 
-    def with_endpoint_url(self, endpoint_url: str):
-        self.endpoint_url = endpoint_url
-        return self
-
     def at_region(self, region_name: str):
         self.region = region_name
+        return self
+
+    def with_endpoint_url(self, endpoint_url: str):
+        self.endpoint_url = endpoint_url
         return self
 
     def build(self):
@@ -37,5 +37,4 @@ class AwsClientBuilder:
             aws_access_key_id=self.access_key,
             aws_secret_access_key=self.secret_key,
             endpoint_url=self.endpoint_url,
-            region_name=self.region
-        )
+            region_name=self.region)

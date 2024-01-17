@@ -13,26 +13,32 @@ from parser import Parser
 from readers.s3_reader import S3Reader
 from serializers.tokenized_event_serializer import JsonTokenizedEventSerializer
 from aws.dynamodb import DynamoDB
+from tokenizer.serializers.token_serializer import DynamoTokenSerializer
 
 
 def handler(event):
-    endpoint = os.environ["CUSTOM_ENDPOINT_URL"]
-    bucket_name = os.environ["CODEFILES_BUCKET_ID"]
-    table_name = os.environ["DYNAMODB_TABLE_NAME"]
+    endpoint = get_environment_variable("CUSTOM_ENDPOINT_URL")
+    bucket_name = get_environment_variable("CODEFILES_BUCKET_ID")
+    table_name = get_environment_variable("DYNAMODB_TABLE_NAME")
     upload_event = AwsCodeUploadEventDeserializer().deserialize(event)
     corpus = get_corpus(bucket_name, endpoint, upload_event)
-    tokens = get_tokens(corpus, upload_event)
-    upload_tokens(endpoint, table_name, tokens, upload_event)
+    tokens = get_tokens(corpus)
+    upload_tokens(tokens, table_name, upload_event, endpoint)
     return create_tokenized_event(upload_event)
 
 
-def upload_tokens(endpoint, table_name, tokens, upload_event):
+def get_environment_variable(key):
+    return os.environ[key]
+
+
+def upload_tokens(tokens, table_name, upload_event, endpoint):
     client = (AwsClientBuilder()
               .for_service(AwsService.DYNAMODB)
               .with_endpoint_url(endpoint)
               .at_region(upload_event.region)
               .build())
-    DynamoDB(client).put_item(table_name, tokens)
+    tokens["filename"] = upload_event.filename
+    DynamoDB(client).put_item(table_name, DynamoTokenSerializer().serialize(tokens))
 
 
 def get_corpus(bucket_name, endpoint, upload_event):
@@ -45,10 +51,8 @@ def get_corpus(bucket_name, endpoint, upload_event):
     return S3Reader().read(s3_object)
 
 
-def get_tokens(corpus, upload_event):
-    tokens = FileProcessor(Parser(), Tokenizer(DataMasker())).process(corpus)
-    tokens["filename"] = upload_event.filename
-    return tokens
+def get_tokens(corpus):
+    return FileProcessor(Parser(), Tokenizer(DataMasker())).process(corpus)
 
 
 def create_tokenized_event(upload_event):

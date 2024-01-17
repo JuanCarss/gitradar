@@ -15,4 +15,5 @@ class FileProcessor:
         return self.__concatenate(tokenized_methods)
 
     def __concatenate(self, tokenized_methods):
-        return {key: list(chain(*[tokenized_method[key] for tokenized_method in tokenized_methods])) for key in tokenized_methods[0].keys()}
+        return {key: list(chain(*[method[key] for method in tokenized_methods]))
+                for key in tokenized_methods[0].keys()}

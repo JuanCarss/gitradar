@@ -10,10 +10,10 @@ class Tokenizer:
 
     def tokenize(self, name: str, body: str):
         tokens = self.tokenizer(body)
-        tokens["labels"] = self.generate_labels(name, body, tokens["input_ids"])
+        tokens["labels"] = self.__generate_labels(name, body, tokens["input_ids"])
         return tokens
 
-    def generate_labels(self, name, body, tokens):
+    def __generate_labels(self, name, body, tokens):
         labels = [-100] * len(tokens)
         for i, token in enumerate(self.___get_mask(name, body, tokens)):
             if self.__is_masked(token):

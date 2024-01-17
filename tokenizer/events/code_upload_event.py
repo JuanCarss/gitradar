@@ -1,7 +1,4 @@
-from tokenizer.event import Event
-
-
-class CodeUploadEvent(Event):
+class CodeUploadEvent:
     def __init__(self, ts: float, source: str, account: str, region: str, filename: str):
         self.ts = ts
         self.source = source

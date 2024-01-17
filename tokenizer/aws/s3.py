@@ -3,4 +3,4 @@ class S3:
         self.client = client
 
     def get_object_from(self, bucket_name: str, key: str):
-        return self.client.get_object(bucket_name, key)
+        return self.client.get_object(Bucket=bucket_name, Key=key)

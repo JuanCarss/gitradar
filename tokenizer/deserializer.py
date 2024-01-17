@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class EventSerializer(ABC):
+class Deserializer(ABC):
     @abstractmethod
-    def serialize(self, event):
+    def deserialize(self, _object: str):
         pass
