@@ -10,7 +10,7 @@ class AwsCodeUploadEventDeserializer(Deserializer):
         source = _object["source"]
         account = _object["account"]
         region = _object["region"]
-        filename = _object['detail']['filename']
+        filename = _object["detail"]["filename"]
         return CodeUploadEvent(ts, source, account, region, filename)
 
     def __to_timestamp(self, time):

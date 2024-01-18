@@ -14,4 +14,4 @@ class JsonTokenizedEventSerializer(Serializer):
         return datetime.utcfromtimestamp(event.ts).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     def __generate_detail(self, event):
-        return json.dumps({"event-type": "CodeTokenized", "filename": event.filename})
+        return json.dumps({"EventType": "CodeTokenized", "Filename": event.filename})
