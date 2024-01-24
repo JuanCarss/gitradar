@@ -1,4 +1,4 @@
-class Parser:
+class JavaParser:
     def find_methods(self, text: str):
         return [self.__method_name(line) for line in text.split("\n")
                 if self.__defines_method(line) and not self.__defines_class(line, text)]

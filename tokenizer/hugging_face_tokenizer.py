@@ -3,7 +3,7 @@ from transformers import AutoTokenizer
 from data_masker import DataMasker
 
 
-class Tokenizer:
+class HuggingFaceTokenizer:
     def __init__(self, masker: DataMasker):
         self.tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base-mlm")
         self.masker = masker

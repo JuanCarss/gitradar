@@ -1,6 +1,6 @@
 import boto3
 
-from tokenizer.aws.aws_services import AwsService
+from aws.aws_services import AwsService
 
 
 class AwsClientBuilder:
