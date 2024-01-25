@@ -12,5 +12,12 @@
         <maven.compiler.target>20</maven.compiler.target>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
+            <version>1.12.470</version>
+        </dependency>
+    </dependencies>
 
 </project>

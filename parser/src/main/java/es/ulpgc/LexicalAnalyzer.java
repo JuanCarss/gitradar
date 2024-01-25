@@ -1,7 +1,7 @@
 package es.ulpgc;
 
-public interface LexicalAnalyzer {
-    Token next();
+import java.util.List;
 
-    boolean hasNext();
+public interface LexicalAnalyzer {
+    List<Token> analyze(String line);
 }

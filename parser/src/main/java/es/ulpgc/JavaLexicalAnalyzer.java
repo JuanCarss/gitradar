@@ -1,120 +1,62 @@
 package es.ulpgc;
 
+import java.util.Collections;
+import java.util.List;
+
 import static es.ulpgc.Token.Type.*;
 
-public interface JavaLexicalAnalyzer extends LexicalAnalyzer {
-    static JavaLexicalAnalyzer create(String text) {
-        return create(text.toCharArray());
+public class JavaLexicalAnalyzer implements LexicalAnalyzer {
+    @Override
+    public List<Token> analyze(String line) {
+        line = line.trim();
+        if (isEmpty(line) || isComment(line)) return Collections.emptyList();
+        if (isClassDefinition(line)) return tokens(new Token(IDENTIFIER, getClassName(line)));
+        if (isSpecialToken(line)) return tokens(findSpecialToken(line));
+        return List.of(new Token(LINE_BREAK, ""));
     }
 
-    static JavaLexicalAnalyzer create(char[] chars) {
-        return new JavaLexicalAnalyzer() {
-            private static final char CR = '\n';
-            private static final char OPEN_BRACKET = '{';
-            private static final char CLOSE_BRACKET = '}';
-            int index = 0;
-            int openBrackets = 0;
-            final StringBuilder sb = new StringBuilder();
+    private Token findSpecialToken(String line) {
+        return isMethodDefinition(line) ? new Token(IDENTIFIER, getMethodName(line)) : new Token(CONTROL_STRUCTURE, "");
+    }
 
-            @Override
-            public Token next() {
-                while (hasChars()) {
-                    char c = nextChar();
-                    if (isEndOfLine(c)) {
-                        if (text().isEmpty() || text().trim().charAt(0) == '/') {
-                            clear();
-                            continue;
-                        }
-                        clear();
-                        return new Token(BR, "");
-                    }
-                    if (c == OPEN_BRACKET) {
-                        openBrackets++;
-                        return tokenFor(text());
-                    }
-                    if (c == CLOSE_BRACKET) {
-                        openBrackets--;
-                    }
-                    add(c);
-                }
-                return new Token(BR, "");
-            }
+    private boolean isMethodDefinition(String line) {
+        return line.substring(0, line.indexOf("(")).split(" ").length > 1;
+    }
 
-            @Override
-            public boolean hasNext() {
-                return hasChars();
-            }
+    private boolean isSpecialToken(String line) {
+        return line.contains(") {");
+    }
 
-            private Token tokenFor(String text) {
-                return isIdentifier() ? getIdentifierToken(text) : getControlToken();
-            }
+    private List<Token> tokens(Token token) {
+        return List.of(token, new Token(LINE_BREAK, ""));
+    }
 
-            private boolean isIdentifier() {
-                return openBrackets < 3;
-            }
+    private boolean isClassDefinition(String line) {
+        return line.contains(" class ");
+    }
 
-            private Token getIdentifierToken(String text) {
-                return new Token(IDENTIFIER, isClassName() ? getClassName(text) : getMethodName(text));
-            }
+    private String getMethodName(String line) {
+        int end = line.indexOf("(") - 1;
+        StringBuilder sb = new StringBuilder();
+        for (int i = end; i > 0; i--) {
+            if (Character.isSpaceChar(line.charAt(i))) break;
+            sb.append(line.charAt(i));
+        }
+        return sb.reverse().toString();
+    }
 
-            private Token getControlToken() {
-                return new Token(CONTROL, "");
-            }
+    private String getClassName(String line) {
+        int start = line.indexOf("class") + "class".length() + 1;
+        int end = line.substring(start).indexOf(" ") + start;
+        return line.substring(start, end);
+    }
 
-            private boolean isClassName() {
-                return openBrackets == 1;
-            }
+    private boolean isEmpty(String line) {
+        return line.isEmpty();
+    }
 
-            private String getClassName(String text) {
-                int start = 0;
-                for (int i = 0; i < text.length(); i++) {
-                    if (Character.isUpperCase(text.charAt(i))) {
-                        start = i;
-                        break;
-                    }
-                }
-                int end = text.length();
-                if (text.substring(start).contains(" ")) {
-                    end = text.substring(start).indexOf(" ") + start;
-                }
-                return text.substring(start,  end);
-            }
-
-            private String getMethodName(String text) {
-                int end = 0;
-                for (int i = text.length() - 1; i >= 0; i--) {
-                    if (text.charAt(i) == '(') {
-                        end = i;
-                        break;
-                    }
-                }
-                return text.substring(text.substring(0, end).lastIndexOf(" "), end).trim();
-            }
-
-            private static boolean isEndOfLine(char c) {
-                return c == CR;
-            }
-
-            private String text() {
-                return sb.toString().trim();
-            }
-
-            private void add(char c) {
-                sb.append(c);
-            }
-
-            private char nextChar() {
-                return chars[index++];
-            }
-
-            private boolean hasChars() {
-                return index < chars.length;
-            }
-
-            private void clear() {
-                sb.setLength(0);
-            }
-        };
+    private boolean isComment(String line) {
+        return line.charAt(0) == '/';
     }
 }
 
