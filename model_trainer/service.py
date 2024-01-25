@@ -5,10 +5,13 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-
+from deserializers.tokenized_event_deserializer import TokenizedEventDeserializer
+from aws.s3 import S3
 from aws.aws_client_builder import AwsClientBuilder
 from aws.aws_services import AwsService
 from events.training_event import TrainingEventBuilder
+from aws.dynamodb import DynamoDB
+from writer.hugging_face_model_writer import HuggingFaceModelWriter
 
 MODEL_DIR = "/tmp/models"
 PACKAGES_DIR = "/tmp/packages"
@@ -21,11 +24,9 @@ def handler(event, context):
     install_packages(PACKAGES_DIR)
     s3_client = build_s3_client(endpoint)
     model, model_ts = load_model(bucket_name, s3_client)
-    if isSetUp(event):
+    if is_set_up(event):
         return
     from trainers.hugging_face_model_trainer import HuggingFaceModelTrainer
-    from deserializers.tokenized_event_deserializer import TokenizedEventDeserializer
-    from aws.s3 import S3
     tokenized_event = TokenizedEventDeserializer().deserialize(event)
     untrained_model_dir = MODEL_DIR + "/" + model_ts
     inputs = get_inputs(endpoint, table_name, tokenized_event.filename)
@@ -64,14 +65,13 @@ def load_model(bucket_name, s3_client):
     return model, model_ts
 
 
-def isSetUp(event):
+def is_set_up(event):
     return "Task" in event.keys() and event["Task"] == "SetUp"
 
 
 def get_inputs(endpoint, table_name, filename):
     from deserializers.dynamodb_deserializer import DynamoDBDeserializer
     from readers.hugging_face_inputs_reader import DynamoInputsReader
-    from aws.dynamodb import DynamoDB
     dynamo = (AwsClientBuilder()
               .for_service(AwsService.DYNAMODB)
               .with_endpoint_url(endpoint)
@@ -80,7 +80,6 @@ def get_inputs(endpoint, table_name, filename):
 
 
 def save_model(s3, trainer, bucket_name):
-    from writer.hugging_face_model_writer import HuggingFaceModelWriter
     ts = time.time()
     output_path = build_path(MODEL_DIR, str(ts))
     HuggingFaceModelWriter().write(trainer, output_path)
