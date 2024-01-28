@@ -11,6 +11,7 @@ public class S3ClientBuilder {
 
     public S3ClientBuilder withEndpoint(String endpoint) {
         this.endpoint = endpoint;
+        System.out.println("endpoint" + endpoint);
         return this;
     }
 

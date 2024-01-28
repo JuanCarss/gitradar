@@ -18,7 +18,7 @@ public class ParsedEventDeserializer {
             return new ParsedEvent(
                     Instant.parse(jsonObject.get("time").getAsString()),
                     jsonObject.get("source").getAsString(),
-                    jsonObject.get("detail").getAsJsonObject().get("filename").getAsString());
+                    jsonObject.get("detail").getAsJsonObject().get("Filename").getAsString());
         }
     }
 }

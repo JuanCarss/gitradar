@@ -59,40 +59,46 @@ resource "aws_s3_bucket" "gitradar-metrics" {
 
 # --------------------- UPLOAD CODE TO S3 ---------------------
 
-resource "aws_s3_object" "parser_code" {
+resource "aws_s3_object" "upload_parser" {
   bucket = aws_s3_bucket.gitradar-executables.bucket
-  key    = "apps/parser.zip"
-  source = "/gitradar/parser.zip"
+  key    = "apps/parser.jar"
+  source = "/gitradar/parser/target/parser-1.0-SNAPSHOT.jar"
 }
 
-resource "aws_s3_object" "tokenizer_code" {
+resource "aws_s3_object" "upload_tokenizer" {
   bucket = aws_s3_bucket.gitradar-executables.bucket
   key    = "apps/tokenizer.zip"
   source = "/gitradar/tokenizer.zip"
 }
 
-resource "aws_s3_object" "event_writer_code" {
+resource "aws_s3_object" "upload_event_writer" {
   bucket = aws_s3_bucket.gitradar-executables.bucket
   key    = "apps/event_writer.zip"
   source = "/gitradar/infra/utils/event_writer.zip"
 }
 
-resource "aws_s3_object" "event_personalizer_code" {
+resource "aws_s3_object" "upload_event_personalizer" {
   bucket = aws_s3_bucket.gitradar-executables.bucket
   key    = "apps/event_personalizer.zip"
   source = "/gitradar/infra/utils/event_personalizer.zip"
 }
 
-resource "aws_s3_object" "model_trainer_code" {
+resource "aws_s3_object" "upload_model_trainer" {
   bucket = aws_s3_bucket.gitradar-executables.bucket
   key    = "apps/model_trainer.zip"
   source = "/gitradar/model_trainer.zip"
 }
 
-resource "aws_s3_object" "name_suggester_code" {
+resource "aws_s3_object" "upload_name_suggester" {
   bucket = aws_s3_bucket.gitradar-executables.bucket
   key    = "apps/name_suggester.zip"
   source = "/gitradar/name_suggester.zip"
+}
+
+resource "aws_s3_object" "upload_code_metrics" {
+  bucket = aws_s3_bucket.gitradar-executables.bucket
+  key    = "apps/code_metrics.jar"
+  source = "/gitradar/code_metrics/target/code_metrics-1.0-SNAPSHOT.jar"
 }
 
 # --------------------- UPLOAD MODEL TO S3 ---------------------
@@ -136,26 +142,26 @@ resource "aws_s3_bucket_notification" "bucket_notification_codefiles" {
 # --------------------- LAMBDA FUNCTIONS ---------------------
 
 resource "aws_lambda_function" "parser" {
-  s3_bucket = aws_s3_object.parser_code.bucket
-  s3_key = aws_s3_object.parser_code.key
+  s3_bucket = aws_s3_object.upload_parser.bucket
+  s3_key = aws_s3_object.upload_parser.key
   function_name = "parser"
   role          = aws_iam_role.parser.arn
-  handler       = "parser.handler"
-  runtime       = "python3.8"
+  handler       = "es.ulpgc.Service::handleRequest"
+  runtime       = "java21"
   timeout       = 60
   environment {
     variables = {
       CODEFILES_BUCKET_ID = aws_s3_bucket.gitradar-codefiles.id,
       CUSTOM_ENDPOINT_URL = "http://host.docker.internal:4566",
-      AWS_REGION = "us-east-1",
+      REGION = "us-east-1",
       DYNAMODB_TABLE_NAME = aws_dynamodb_table.semantic_tokens.name
     }
   }
 }
 
 resource "aws_lambda_function" "tokenizer" {
-  s3_bucket = aws_s3_object.tokenizer_code.bucket
-  s3_key = aws_s3_object.tokenizer_code.key
+  s3_bucket = aws_s3_object.upload_tokenizer.bucket
+  s3_key = aws_s3_object.upload_tokenizer.key
   function_name = "tokenizer"
   role          = aws_iam_role.tokenizer.arn
   handler       = "service.handler"
@@ -171,8 +177,8 @@ resource "aws_lambda_function" "tokenizer" {
 }
 
 resource "aws_lambda_function" "event_writer" {
-  s3_bucket = aws_s3_object.event_writer_code.bucket
-  s3_key = aws_s3_object.event_writer_code.key
+  s3_bucket = aws_s3_object.upload_event_writer.bucket
+  s3_key = aws_s3_object.upload_event_writer.key
   function_name    = "event_writer"
   role             = aws_iam_role.event_writer.arn
   handler          = "service.handler"
@@ -188,8 +194,8 @@ resource "aws_lambda_function" "event_writer" {
 }
 
 resource "aws_lambda_function" "event_personalizer" {
-  s3_bucket = aws_s3_object.event_personalizer_code.bucket
-  s3_key = aws_s3_object.event_personalizer_code.key
+  s3_bucket = aws_s3_object.upload_event_personalizer.bucket
+  s3_key = aws_s3_object.upload_event_personalizer.key
   function_name    = "event_personalizer"
   role             = aws_iam_role.event_personalizer.arn
   handler          = "service.handler"
@@ -203,7 +209,8 @@ resource "aws_lambda_function" "event_personalizer" {
 }
 
 resource "aws_lambda_function" "code_metrics" {
-  filename         = "/gitradar/code_metrics/target/code_metrics-1.0-SNAPSHOT.jar"
+  s3_bucket = aws_s3_object.upload_code_metrics.bucket
+  s3_key = aws_s3_object.upload_code_metrics.key
   function_name    = "code_metrics"
   role             = aws_iam_role.code_metrics.arn
   handler          = "es.ulpgc.Service::handleRequest"
@@ -220,8 +227,8 @@ resource "aws_lambda_function" "code_metrics" {
 }
 
 resource "aws_lambda_function" "model_trainer" {
-  s3_bucket = aws_s3_object.model_trainer_code.bucket
-  s3_key = aws_s3_object.model_trainer_code.key
+  s3_bucket = aws_s3_object.upload_model_trainer.bucket
+  s3_key = aws_s3_object.upload_model_trainer.key
   function_name    = "model_trainer"
   role             = aws_iam_role.model_trainer.arn
   handler          = "service.handler"
@@ -241,8 +248,8 @@ resource "aws_lambda_function" "model_trainer" {
 }
 
 resource "aws_lambda_function" "name_suggester" {
-  s3_bucket = aws_s3_object.name_suggester_code.bucket
-  s3_key = aws_s3_object.name_suggester_code.key
+  s3_bucket = aws_s3_object.upload_name_suggester.bucket
+  s3_key = aws_s3_object.upload_name_suggester.key
   function_name    = "name_suggester"
   role             = aws_iam_role.name_suggester.arn
   handler          = "service.handler"
@@ -426,14 +433,14 @@ module "eventbridge" {
 
   targets = {
     code_file_added = [
-#      {
-#        name = "invoke_parser"
-#        arn  = aws_lambda_function.parser.arn
-#      },
       {
-        name = "invoke_tokenizer"
-        arn  = aws_lambda_function.tokenizer.arn
-      }
+        name = "invoke_parser"
+        arn  = aws_lambda_function.parser.arn
+      },
+#      {
+#        name = "invoke_tokenizer"
+#        arn  = aws_lambda_function.tokenizer.arn
+#      }
     ],
     new_event_to_personalize   = [
       {

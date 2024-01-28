@@ -19,7 +19,7 @@ public class CodeUploadEventDeserializer {
             return new CodeUploadEvent(
                     Instant.parse(jsonObject.get("time").getAsString()),
                     jsonObject.get("source").getAsString(),
-                    jsonObject.get("detail").getAsJsonObject().get("filename").getAsString()
+                    jsonObject.get("detail").getAsJsonObject().get("Filename").getAsString()
             );
         }
     }
