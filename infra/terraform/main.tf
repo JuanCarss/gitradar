@@ -101,6 +101,12 @@ resource "aws_s3_object" "upload_code_metrics" {
   source = "/gitradar/code_metrics/target/code_metrics-1.0-SNAPSHOT.jar"
 }
 
+resource "aws_s3_object" "upload_metrics_provider" {
+  bucket = aws_s3_bucket.gitradar-executables.bucket
+  key    = "apps/metrics_provider.jar"
+  source = "/gitradar/metrics_provider/target/metrics_provider-1.0-SNAPSHOT.jar"
+}
+
 # --------------------- UPLOAD MODEL TO S3 ---------------------
 
 #resource "aws_s3_object" "model" {
@@ -267,6 +273,24 @@ resource "aws_lambda_function" "name_suggester" {
   }
 }
 
+resource "aws_lambda_function" "metrics_provider" {
+  s3_bucket = aws_s3_object.upload_metrics_provider.bucket
+  s3_key = aws_s3_object.upload_metrics_provider.key
+  function_name    = "metrics_provider"
+    role             = aws_iam_role.metrics_provider.arn
+    handler          = "es.ulpgc.Service::handleRequest"
+    runtime = "java21"
+    timeout       = 60
+    environment {
+      variables = {
+        METRICS_BUCKET_ID = aws_s3_bucket.gitradar-metrics.id,
+        CUSTOM_ENDPOINT_URL = "http://host.docker.internal:4566",
+        REGION = "us-east-1"
+      }
+    }
+  }
+
+
 # --------------------- LAMBDA IAM ROLES ---------------------
 
 resource "aws_iam_role" "parser" {
@@ -301,6 +325,11 @@ resource "aws_iam_role" "name_suggester" {
 
 resource "aws_iam_role" "code_metrics" {
   name = "iam_code_metrics_role"
+  assume_role_policy = file("./policies/lambda_exec_policy.json")
+}
+
+resource "aws_iam_role" "metrics_provider" {
+  name = "iam_metrics_provider_role"
   assume_role_policy = file("./policies/lambda_exec_policy.json")
 }
 
@@ -358,7 +387,7 @@ resource "aws_api_gateway_rest_api" "api" {
             httpMethod           = "POST"
             payloadFormatVersion = "1.0"
             type                 = "AWS_PROXY"
-            uri                  = aws_lambda_function.event_writer.invoke_arn
+            uri                  = aws_lambda_function.metrics_provider.invoke_arn
           }
         }
       }
