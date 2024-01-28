@@ -53,6 +53,10 @@ resource "aws_s3_bucket" "gitradar-models" {
   bucket = "gitradar-models"
 }
 
+resource "aws_s3_bucket" "gitradar-metrics" {
+  bucket = "gitradar-metrics"
+}
+
 # --------------------- UPLOAD CODE TO S3 ---------------------
 
 resource "aws_s3_object" "parser_code" {
@@ -93,12 +97,12 @@ resource "aws_s3_object" "name_suggester_code" {
 
 # --------------------- UPLOAD MODEL TO S3 ---------------------
 
-resource "aws_s3_object" "model" {
-  for_each = fileset("/gitradar/infra/model", "*")
-  bucket = aws_s3_bucket.gitradar-models.bucket
-  key    = "1706048794.7155528/${each.value}"
-  source = "/gitradar/infra/model/${each.value}"
-}
+#resource "aws_s3_object" "model" {
+#  for_each = fileset("/gitradar/infra/model", "*")
+#  bucket = aws_s3_bucket.gitradar-models.bucket
+#  key    = "1706048794.7155528/${each.value}"
+#  source = "/gitradar/infra/model/${each.value}"
+#}
 
 # --------------------- BUCKET POLICIES ---------------------
 
@@ -109,25 +113,25 @@ resource "aws_s3_bucket_notification" "bucket_notification_codefiles" {
 
 # --------------------- LAMBDA INVOKATION ---------------------
 
-data "aws_lambda_invocation" "init_model_trainer" {
-  function_name = aws_lambda_function.model_trainer.function_name
-
-    input = <<JSON
-  {
-    "Task": "SetUp"
-  }
-  JSON
-}
-
-data "aws_lambda_invocation" "name_suggester_trainer" {
-  function_name = aws_lambda_function.name_suggester.function_name
-
-    input = <<JSON
-  {
-    "Task": "SetUp"
-  }
-  JSON
-}
+#data "aws_lambda_invocation" "init_model_trainer" {
+#  function_name = aws_lambda_function.model_trainer.function_name
+#
+#    input = <<JSON
+#  {
+#    "Task": "SetUp"
+#  }
+#  JSON
+#}
+#
+#data "aws_lambda_invocation" "name_suggester_trainer" {
+#  function_name = aws_lambda_function.name_suggester.function_name
+#
+#    input = <<JSON
+#  {
+#    "Task": "SetUp"
+#  }
+#  JSON
+#}
 
 # --------------------- LAMBDA FUNCTIONS ---------------------
 
@@ -198,6 +202,23 @@ resource "aws_lambda_function" "event_personalizer" {
   }
 }
 
+resource "aws_lambda_function" "code_metrics" {
+  filename         = "/gitradar/code_metrics/target/code_metrics-1.0-SNAPSHOT.jar"
+  function_name    = "code_metrics"
+  role             = aws_iam_role.code_metrics.arn
+  handler          = "es.ulpgc.Service::handleRequest"
+  runtime = "java21"
+  timeout       = 60
+  environment {
+    variables = {
+      METRICS_BUCKET_ID = aws_s3_bucket.gitradar-metrics.id,
+      CUSTOM_ENDPOINT_URL = "http://host.docker.internal:4566",
+      DYNAMODB_TABLE_NAME = aws_dynamodb_table.semantic_tokens.name
+      REGION = "us-east-1"
+    }
+  }
+}
+
 resource "aws_lambda_function" "model_trainer" {
   s3_bucket = aws_s3_object.model_trainer_code.bucket
   s3_key = aws_s3_object.model_trainer_code.key
@@ -239,53 +260,6 @@ resource "aws_lambda_function" "name_suggester" {
   }
 }
 
-
-# --------------------- LAMBDA EVENT BRIDGE PERMISSIONS ---------------------
-
-
-
-#resource "aws_lambda_permission" "allow_eventbridge_parser" {
-#  statement_id  = "AllowExecutionFromEventBridgeParser"
-#  action        = "lambda:InvokeFunction"
-#  function_name = aws_lambda_function.parser.function_name
-#  principal     = "events.amazonaws.com"
-#}
-#
-#resource "aws_lambda_permission" "allow_eventbridge_tokenizer" {
-#  statement_id  = "AllowExecutionFromEventBridgeTokenizer"
-#  action        = "lambda:InvokeFunction"
-#  function_name = aws_lambda_function.tokenizer.function_name
-#  principal     = "events.amazonaws.com"
-#}
-#
-#resource "aws_lambda_permission" "allow_eventbridge_event_writer" {
-#  statement_id  = "AllowExecutionFromEventBridgeEventWriter"
-#  action        = "lambda:InvokeFunction"
-#  function_name = aws_lambda_function.event_writer.function_name
-#  principal     = "events.amazonaws.com"
-#}
-#
-#resource "aws_lambda_permission" "allow_eventbridge_event_personalizer" {
-#  statement_id  = "AllowExecutionFromEventBridgeEventPersonalizer"
-#  action        = "lambda:InvokeFunction"
-#  function_name = aws_lambda_function.event_personalizer.function_name
-#  principal     = "events.amazonaws.com"
-#}
-#
-#resource "aws_lambda_permission" "allow_eventbridge_model_trainer" {
-#  statement_id  = "AllowExecutionFromEventBridgeModelTrainer"
-#  action        = "lambda:InvokeFunction"
-#  function_name = aws_lambda_function.model_trainer.function_name
-#  principal     = "events.amazonaws.com"
-#}
-#
-#resource "aws_lambda_permission" "allow_eventbridge_name_suggester" {
-#  statement_id  = "AllowExecutionFromEventBridgeNameSuggester"
-#  action        = "lambda:InvokeFunction"
-#  function_name = aws_lambda_function.name_suggester.function_name
-#  principal     = "events.amazonaws.com"
-#}
-#
 # --------------------- LAMBDA IAM ROLES ---------------------
 
 resource "aws_iam_role" "parser" {
@@ -315,6 +289,11 @@ resource "aws_iam_role" "model_trainer" {
 
 resource "aws_iam_role" "name_suggester" {
   name = "iam_name_suggester_role"
+  assume_role_policy = file("./policies/lambda_exec_policy.json")
+}
+
+resource "aws_iam_role" "code_metrics" {
+  name = "iam_code_metrics_role"
   assume_role_policy = file("./policies/lambda_exec_policy.json")
 }
 
