@@ -1,7 +1,8 @@
 package es.ulpgc.metrics;
 
-public record MethodMetrics(int lines, int cyclomaticComplexity) {
+public record MethodMetrics(String name, int lines, int cyclomaticComplexity) {
     public static class MethodMetricsBuilder {
+        private String name;
         private int lines = 0;
         private int cyclomaticComplexity = 0;
 
@@ -15,8 +16,13 @@ public record MethodMetrics(int lines, int cyclomaticComplexity) {
             return this;
         }
 
+        public MethodMetricsBuilder withName(String name) {
+            this.name = name;
+            return this;
+        }
+
         public MethodMetrics build() {
-            MethodMetrics methodMetrics = new MethodMetrics(lines, cyclomaticComplexity);
+            MethodMetrics methodMetrics = new MethodMetrics(name, lines, cyclomaticComplexity);
             reset();
             return methodMetrics;
         }

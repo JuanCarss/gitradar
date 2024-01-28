@@ -16,7 +16,7 @@ public class MetricsGenerator {
     private final ClassMetricsBuilder CLASS_METRICS_BUILDER = new ClassMetricsBuilder();
     private final MethodMetricsBuilder METHOD_METRICS_BUILDER = new MethodMetricsBuilder();
 
-    public Metrics generate(List<Token> tokens) {
+    public Metrics generate(List<Token> tokens, String filename) {
         List<Integer> classesIndexes = getClassesIndexes(tokens);
         addReferencesLines(tokens.subList(0, classesIndexes.get(0)));
         addLastTokensIndex(classesIndexes, tokens);
@@ -24,7 +24,11 @@ public class MetricsGenerator {
             analyzeClass(getTokens(tokens, classesIndexes.get(i), classesIndexes.get(i + 1)));
             METRICS_BUILDER.addClass(CLASS_METRICS_BUILDER.build());
         }
-        return METRICS_BUILDER.build();
+        return METRICS_BUILDER.withFilename(filename).build();
+    }
+
+    private void addClassName(Token token) {
+        CLASS_METRICS_BUILDER.withName(token.text());
     }
 
     private void addReferencesLines(List<Token> tokens) {
@@ -40,7 +44,8 @@ public class MetricsGenerator {
     private void analyzeClass(List<Token> classTokens) {
         List<Integer> methodsStarts = getMethodsStarts(classTokens);
         addLastTokensIndex(methodsStarts, classTokens);
-        addClassFirstlines(getTokensBeforeMethods(classTokens, methodsStarts));
+        addClassFirstLines(getTokensBeforeMethods(classTokens, methodsStarts));
+        addClassName(classTokens.get(0));
         for (int i = 0; i < methodsStarts.size() -1 ; i++) {
             analyzeMethod(getTokens(classTokens, methodsStarts.get(i), methodsStarts.get(i + 1)));
             CLASS_METRICS_BUILDER.addMethod(METHOD_METRICS_BUILDER.build());
@@ -51,7 +56,7 @@ public class MetricsGenerator {
         return classTokens.subList(0, methodsStarts.get(0));
     }
 
-    private void addClassFirstlines(List<Token> tokens) {
+    private void addClassFirstLines(List<Token> tokens) {
         tokens.parallelStream()
                 .filter(MetricsGenerator::isLineBreak)
                 .forEach(token -> CLASS_METRICS_BUILDER.addClassFieldLine());
@@ -60,6 +65,11 @@ public class MetricsGenerator {
     private void analyzeMethod(List<Token> methodTokens) {
         countMethodCodeLines(methodTokens);
         countMethodCyclomaticComplexity(methodTokens);
+        addMethodName(methodTokens.get(0));
+    }
+
+    private void addMethodName(Token token) {
+        METHOD_METRICS_BUILDER.withName(token.text());
     }
 
     private void countMethodCyclomaticComplexity(List<Token> methodTokens) {

@@ -4,15 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClassMetrics {
+    private final String name;
     private final int lines;
-    private final List<MethodMetrics> methodMetricsList;
+    private final int methodsInClass;
     private final int maxMethodLines;
     private final double avgMethodLines;
     private final int maxCyclomaticComplexity;
     private final double avgCyclomaticComplexity;
-    private final Integer methodsInClass;
+    private final List<MethodMetrics> methodMetricsList;
 
-    public ClassMetrics(int lines, List<MethodMetrics> methodMetricsList) {
+    public ClassMetrics(String name, int lines, List<MethodMetrics> methodMetricsList) {
+        this.name = name;
         this.lines = lines;
         this.methodMetricsList = methodMetricsList;
         maxMethodLines = determineMaxMethodLines();
@@ -82,9 +84,14 @@ public class ClassMetrics {
         return methodsInClass;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public static class ClassMetricsBuilder {
         private final List<MethodMetrics> methodMetricsList = new ArrayList<>();
         private int lines = 0;
+        private String name;
 
         public ClassMetricsBuilder addMethod(MethodMetrics methodMetrics) {
             methodMetricsList.add(methodMetrics);
@@ -97,8 +104,13 @@ public class ClassMetrics {
             return this;
         }
 
+        public ClassMetricsBuilder withName(String name) {
+            this.name = name;
+            return this;
+        }
+
         public ClassMetrics build() {
-            ClassMetrics classMetrics = new ClassMetrics(lines, new ArrayList<>(methodMetricsList));
+            ClassMetrics classMetrics = new ClassMetrics(name ,lines, new ArrayList<>(methodMetricsList));
             cleanBuilder();
             return classMetrics;
         }
