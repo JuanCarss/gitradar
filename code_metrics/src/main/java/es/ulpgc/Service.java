@@ -28,8 +28,8 @@ public class Service implements RequestHandler<InputStream, String> {
     public String handleRequest(InputStream is, Context context) {
         ParsedEvent parsedEvent = new ParsedEventDeserializer().deserialize(read(is));
         String metrics = new JsonMetricsSerializer()
-                .serialize(new MetricsGenerator().generate(readTokens(buildDynamoDBClient(), parsedEvent.filename())));
-        S3.putObject(buildS3Client(), System.getenv("METRICS_BUCKET_ID"), parsedEvent.filename(), metrics);
+                .serialize(new MetricsGenerator().generate(readTokens(buildDynamoDBClient(), parsedEvent.filename()), parsedEvent.filename()));
+        S3.putObject(buildS3Client(), System.getenv("METRICS_BUCKET_ID"), parsedEvent.filename() + ".json", metrics);
         EventBridge.putEvent(buildEventBridgeClient(), buildMetricsEvent(parsedEvent));
         return metrics;
     }

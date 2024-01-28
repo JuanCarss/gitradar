@@ -400,7 +400,7 @@ module "eventbridge" {
 
   rules = {
     code_file_added = {
-      description   = "Trigger parser when object is added to S3"
+      description   = "Trigger parser and tokenizer when object is added to S3"
       event_pattern = jsonencode({
             "detail" : {"EventType" : ["CodeUploaded"]}
             "source": ["s3.gitradar-codefiles"]
@@ -428,6 +428,14 @@ module "eventbridge" {
             "source": ["lambda.tokenizer"]
         })
       enabled       = true
+    },
+    code_file_parsed = {
+      description   = "Trigger code_metrics when file is parsed"
+      event_pattern = jsonencode({
+        "detail" : {"EventType" : ["FileParsed"]}
+        "source": ["lambda.parser"]
+      })
+      enabled       = true
     }
   }
 
@@ -437,10 +445,10 @@ module "eventbridge" {
         name = "invoke_parser"
         arn  = aws_lambda_function.parser.arn
       },
-#      {
-#        name = "invoke_tokenizer"
-#        arn  = aws_lambda_function.tokenizer.arn
-#      }
+      {
+        name = "invoke_tokenizer"
+        arn  = aws_lambda_function.tokenizer.arn
+      }
     ],
     new_event_to_personalize   = [
       {
@@ -458,6 +466,12 @@ module "eventbridge" {
       {
         name = "invoke_model_trainer"
         arn =  aws_lambda_function.model_trainer.arn
+      }
+    ],
+    code_file_parsed = [
+      {
+        name = "invoke_code_metrics"
+        arn =  aws_lambda_function.code_metrics.arn
       }
     ]
   }
