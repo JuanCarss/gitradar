@@ -1,22 +1,19 @@
 package es.ulpgc.readers;
 
-import com.amazonaws.services.s3.model.S3Object;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Stream;
 
 public class S3Reader {
-    public Stream<String> read(S3Object object) {
-        List<String> lines = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(object.getObjectContent()))) {
-            while (reader.ready()) lines.add(reader.readLine());
+    public Stream<String> read(ResponseInputStream<GetObjectResponse> object) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(object))) {
+            return reader.lines();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Content Wrong");
         }
-        return lines.stream();
     }
 }
