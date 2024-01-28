@@ -505,5 +505,3 @@ module "eventbridge" {
     ]
   }
 }
-
-
