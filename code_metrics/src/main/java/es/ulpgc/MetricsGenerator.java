@@ -18,12 +18,19 @@ public class MetricsGenerator {
 
     public Metrics generate(List<Token> tokens) {
         List<Integer> classesIndexes = getClassesIndexes(tokens);
+        addReferencesLines(tokens.subList(0, classesIndexes.get(0)));
         addLastTokensIndex(classesIndexes, tokens);
         for (int i = 0; i < classesIndexes.size() - 1 ; i++) {
             analyzeClass(getTokens(tokens, classesIndexes.get(i), classesIndexes.get(i + 1)));
             METRICS_BUILDER.addClass(CLASS_METRICS_BUILDER.build());
         }
         return METRICS_BUILDER.build();
+    }
+
+    private void addReferencesLines(List<Token> tokens) {
+        tokens.parallelStream()
+                .filter(MetricsGenerator::isLineBreak)
+                .forEach(token -> METRICS_BUILDER.increaseReferenceLines());
     }
 
     private static List<Token> getTokens(List<Token> tokens, int start, int end) {
@@ -47,7 +54,7 @@ public class MetricsGenerator {
     private void addClassFirstlines(List<Token> tokens) {
         tokens.parallelStream()
                 .filter(MetricsGenerator::isLineBreak)
-                .forEach(token -> CLASS_METRICS_BUILDER.addNonMethodLine());
+                .forEach(token -> CLASS_METRICS_BUILDER.addClassFieldLine());
     }
 
     private void analyzeMethod(List<Token> methodTokens) {

@@ -7,8 +7,7 @@ import java.util.Collections;
 import java.util.Map;
 
 public class DynamoDB {
-
-    public Map<String, AttributeValue> getItem(AmazonDynamoDB clientDynamodb, String tablename, String key, String id) {
+    public static Map<String, AttributeValue> getItem(AmazonDynamoDB clientDynamodb, String tablename, String key, String id) {
         return clientDynamodb.getItem(tablename, Collections.singletonMap(key, new AttributeValue().withS(id))).getItem();
     }
 }

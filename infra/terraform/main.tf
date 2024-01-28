@@ -53,6 +53,10 @@ resource "aws_s3_bucket" "gitradar-models" {
   bucket = "gitradar-models"
 }
 
+resource "aws_s3_bucket" "gitradar-metrics" {
+  bucket = "gitradar-metrics"
+}
+
 # --------------------- UPLOAD CODE TO S3 ---------------------
 
 resource "aws_s3_object" "parser_code" {
@@ -207,7 +211,10 @@ resource "aws_lambda_function" "code_metrics" {
   timeout       = 60
   environment {
     variables = {
-      CUSTOM_ENDPOINT_URL = "http://host.docker.internal:4566"
+      METRICS_BUCKET_ID = aws_s3_bucket.gitradar-metrics.id,
+      CUSTOM_ENDPOINT_URL = "http://host.docker.internal:4566",
+      DYNAMODB_TABLE_NAME = aws_dynamodb_table.semantic_tokens.name
+      REGION = "us-east-1"
     }
   }
 }
@@ -426,11 +433,7 @@ module "eventbridge" {
       {
         name = "invoke_tokenizer"
         arn  = aws_lambda_function.tokenizer.arn
-      },
-        {
-          name = "invoke_code_metrics"
-          arn  = aws_lambda_function.code_metrics.arn
-        }
+      }
     ],
     new_event_to_personalize   = [
       {

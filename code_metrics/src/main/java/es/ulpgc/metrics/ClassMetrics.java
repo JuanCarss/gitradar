@@ -6,75 +6,106 @@ import java.util.List;
 public class ClassMetrics {
     private final int lines;
     private final List<MethodMetrics> methodMetricsList;
-    private final int maxMethodLines = getMaxMethodLines(); //TODO meter las cosas como atributos
+    private final int maxMethodLines;
+    private final double avgMethodLines;
+    private final int maxCyclomaticComplexity;
+    private final double avgCyclomaticComplexity;
+    private final Integer methodsInClass;
 
     public ClassMetrics(int lines, List<MethodMetrics> methodMetricsList) {
         this.lines = lines;
         this.methodMetricsList = methodMetricsList;
+        maxMethodLines = determineMaxMethodLines();
+        avgMethodLines = computeAvgMethodLines();
+        maxCyclomaticComplexity = determineMaxCyclomaticComplexity();
+        avgCyclomaticComplexity = computeAvgCyclomaticComplexity();
+        methodsInClass = countMethodsInClass();
     }
 
     public int getLines() {
         return lines;
     }
 
-    public Integer getMethodsInClass() {
+    private Integer countMethodsInClass() {
         return methodMetricsList.size();
     }
 
-    public int getMaxMethodLines() {
+    private int determineMaxMethodLines() {
         return  methodMetricsList.stream()
                 .mapToInt(MethodMetrics::lines)
                 .max()
                 .getAsInt();
+    }
+
+    private double computeAvgMethodLines() {
+        return methodMetricsList.stream()
+                .mapToInt(MethodMetrics::lines)
+                .average()
+                .getAsDouble();
+    }
+
+    private int determineMaxCyclomaticComplexity() {
+        return  methodMetricsList.stream()
+                .mapToInt(MethodMetrics::cyclomaticComplexity)
+                .max()
+                .getAsInt();
+    }
+
+    private double computeAvgCyclomaticComplexity() {
+        return methodMetricsList.stream()
+                .mapToInt(MethodMetrics::cyclomaticComplexity)
+                .average()
+                .getAsDouble();
+    }
+
+    public List<MethodMetrics> getMethodMetricsList() {
+        return methodMetricsList;
+    }
+
+    public int getMaxMethodLines() {
+        return maxMethodLines;
     }
 
     public double getAvgMethodLines() {
-        return methodMetricsList.stream()
-                .mapToInt(MethodMetrics::lines)
-                .average()
-                .getAsDouble();
+        return avgMethodLines;
     }
 
     public int getMaxCyclomaticComplexity() {
-        return  methodMetricsList.stream()
-                .mapToInt(MethodMetrics::cyclomaticComplexity)
-                .max()
-                .getAsInt();
+        return maxCyclomaticComplexity;
     }
 
     public double getAvgCyclomaticComplexity() {
-        return methodMetricsList.stream()
-                .mapToInt(MethodMetrics::cyclomaticComplexity)
-                .average()
-                .getAsDouble();
+        return avgCyclomaticComplexity;
     }
 
-
+    public Integer getMethodsInClass() {
+        return methodsInClass;
+    }
 
     public static class ClassMetricsBuilder {
         private final List<MethodMetrics> methodMetricsList = new ArrayList<>();
-        private int codeLines = 0;
+        private int lines = 0;
 
         public ClassMetricsBuilder addMethod(MethodMetrics methodMetrics) {
             methodMetricsList.add(methodMetrics);
-            codeLines += methodMetrics.lines();
+            lines += methodMetrics.lines();
             return this;
         }
 
-        public ClassMetricsBuilder addNonMethodLine() {
-            codeLines++;
+        public ClassMetricsBuilder addClassFieldLine() {
+            lines++;
             return this;
         }
 
         public ClassMetrics build() {
-            ClassMetrics classMetrics = new ClassMetrics(codeLines, new ArrayList<>(methodMetricsList));
+            ClassMetrics classMetrics = new ClassMetrics(lines, new ArrayList<>(methodMetricsList));
             cleanBuilder();
             return classMetrics;
         }
 
         private void cleanBuilder() {
             methodMetricsList.clear();
-            codeLines = 0;
+            lines = 0;
         }
     }
 }
