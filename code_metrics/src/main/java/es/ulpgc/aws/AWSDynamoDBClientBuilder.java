@@ -3,27 +3,21 @@ package es.ulpgc.aws;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
-import software.amazon.awssdk.services.eventbridge.EventBridgeClient;
 
-import java.net.URI;
+public class AWSDynamoDBClientBuilder {
+    private String endpoint;
+    private String region;
 
-public class AWSClientBuilder {
-
-    private final String endpoint;
-    private final String region;
-
-    public AWSClientBuilder(String endpoint, String region) {
+    public AWSDynamoDBClientBuilder withEndpoint(String endpoint) {
         this.endpoint = endpoint;
+        return this;
+    }
+    public AWSDynamoDBClientBuilder withRegion(String region) {
         this.region = region;
+        return this;
     }
 
-    public EventBridgeClient buildEventBridgeClient() {
-        return EventBridgeClient.builder()
-                .endpointOverride(URI.create("http://localhost:4566"))
-                .build();
-    }
-
-    public AmazonDynamoDB buildDynamoDBClient() {
+    public AmazonDynamoDB build() {
         return AmazonDynamoDBClientBuilder.standard()
                 .withEndpointConfiguration(
                         new AwsClientBuilder.EndpointConfiguration(

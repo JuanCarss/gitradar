@@ -2,9 +2,8 @@ package es.ulpgc.events;
 
 import java.time.Instant;
 
-public record ParsedFileEvent(Instant ts, String source, String filename) {
+public record ParsedEvent(Instant ts, String source, String filename) {
     public static class ParsedFileEventBuilder {
-
         private Instant ts;
         private String source;
         private String filename;
@@ -24,8 +23,8 @@ public record ParsedFileEvent(Instant ts, String source, String filename) {
             return this;
         }
 
-        public ParsedFileEvent build() {
-            return new ParsedFileEvent(this.ts, this.source, this.filename);
+        public ParsedEvent build() {
+            return new ParsedEvent(this.ts, this.source, this.filename);
         }
     }
 }
