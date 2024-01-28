@@ -1,18 +1,19 @@
-package es.ulpgc.aws;
+package es.ulpgc.aws.dynamodb;
 
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 
-public class AWSDynamoDBClientBuilder {
+public class DynamoDBClientBuilder {
     private String endpoint;
     private String region;
 
-    public AWSDynamoDBClientBuilder withEndpoint(String endpoint) {
+    public DynamoDBClientBuilder withEndpoint(String endpoint) {
         this.endpoint = endpoint;
         return this;
     }
-    public AWSDynamoDBClientBuilder withRegion(String region) {
+
+    public DynamoDBClientBuilder at(String region) {
         this.region = region;
         return this;
     }

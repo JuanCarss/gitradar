@@ -7,9 +7,9 @@ import java.lang.reflect.Type;
 import java.time.Instant;
 
 public class ParsedEventDeserializer {
-    public ParsedEvent deserialize(String json) {
+    public ParsedEvent deserialize(String event) {
         Gson gson = new GsonBuilder().registerTypeAdapter(ParsedEvent.class, new ParseEventTypeAdapter()).create();
-        return gson.fromJson(json, ParsedEvent.class);
+        return gson.fromJson(event, ParsedEvent.class);
     }
     public static class ParseEventTypeAdapter implements JsonDeserializer<ParsedEvent> {
         @Override
