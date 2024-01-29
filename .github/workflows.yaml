@@ -1,0 +1,54 @@
+name: Deploy
+run-name: Deploy to ${{ github.repository }} by @${{ github.actor }}
+
+on:
+  push:
+    branches: ["develop"] #TODO change to main/master for release
+
+jobs:
+  build_infrastructure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start LocalStack
+        run: |
+          docker pull localstack/localstack:latest
+          cd infra/localstack
+          docker-compose up -d
+      - name: Install tokenizer libraries
+        run: |
+          pip install -r ./tokenizer/requirements.txt --target ./tokenizer
+      - name: Zip tokenizer
+      - run: |
+          cd tokenizer
+          zip -r ../tokenizer.zip *
+      - name: Zip model trainer
+      - run: |
+          cd model_trainer
+          zip -r ../model_trainer.zip *
+      - name: Zip name suggester
+      - run: |
+          cd name_suggester
+          zip -r ../name_suggester.zip *
+      - name: Package parser
+      - run: |
+          cd parser
+          mvn -B "parser-1.0-SNAPSHOT.jar" --file pom.xml
+      - name: Package code metrics
+      - run: |
+          cd code_metrics
+          mvn -B "code_metrics-1.0-SNAPSHOT.jar" --file pom.xml
+      - name: Package metrics provider
+      - run: |
+          cd metrics_provider
+          mvn -B "metrics_provider-1.0-SNAPSHOT.jar" --file pom.xml
+      - name: Deploy on Terraform
+        run: |
+          docker pull hashicorp/terraform:latest
+          cd infra/terraform
+          docker-compose run --rm terraform init
+          docker-compose run --rm terraform apply --auto-approve
+
+    
