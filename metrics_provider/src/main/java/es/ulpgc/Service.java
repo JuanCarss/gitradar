@@ -20,12 +20,12 @@ public class Service implements RequestHandler<APIGatewayProxyRequestEvent, APIG
         APIGatewayProxyResponseEvent responseEvent = new APIGatewayProxyResponseEvent();
         Map<String, String> params = input.getQueryStringParameters();
         S3Client s3Client = buildS3Client();
-        if (!metricsExists(s3Client, params.get("filename"))) {
+        if (!metricsExists(s3Client, getFilename(params))) {
             responseEvent.setBody("File does not exist.");
             responseEvent.setStatusCode(404);
             return responseEvent;
         }
-        String metrics = getFileMetrics(s3Client, params.get("filename"));
+        String metrics = getFileMetrics(s3Client, getFilename(params));
         if (isClassRequest(params)) metrics = getClassMetrics(metrics, params.get("class"));
         if (metrics.isEmpty()) {
             responseEvent.setBody("Class does not exist in file.");
@@ -35,6 +35,10 @@ public class Service implements RequestHandler<APIGatewayProxyRequestEvent, APIG
         responseEvent.setBody(metrics);
         responseEvent.setStatusCode(200);
         return responseEvent;
+    }
+
+    private static String getFilename(Map<String, String> params) {
+        return params.get("filename") + ".json";
     }
 
     private static boolean isClassRequest(Map<String, String> params) {
