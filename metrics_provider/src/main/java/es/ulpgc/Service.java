@@ -19,14 +19,14 @@ public class Service implements RequestHandler<APIGatewayProxyRequestEvent, APIG
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
         APIGatewayProxyResponseEvent responseEvent = new APIGatewayProxyResponseEvent();
         Map<String, String> params = input.getQueryStringParameters();
-        S3Client s3Client = new S3ClientBuilder().withEndpoint(System.getenv("CUSTOM_ENDPOINT_URL")).at(System.getenv("REGION")).build();
+        S3Client s3Client = buildS3Client();
         if (!metricsExists(s3Client, params.get("filename"))) {
             responseEvent.setBody("File does not exist.");
             responseEvent.setStatusCode(404);
             return responseEvent;
         }
         String metrics = getFileMetrics(s3Client, params.get("filename"));
-        if (params.containsKey("class")) metrics = getClassMetrics(metrics, params.get("class"));
+        if (isClassRequest(params)) metrics = getClassMetrics(metrics, params.get("class"));
         if (metrics.isEmpty()) {
             responseEvent.setBody("Class does not exist in file.");
             responseEvent.setStatusCode(404);
@@ -37,6 +37,26 @@ public class Service implements RequestHandler<APIGatewayProxyRequestEvent, APIG
         return responseEvent;
     }
 
+    private static boolean isClassRequest(Map<String, String> params) {
+        return params.containsKey("class");
+    }
+
+    private static S3Client buildS3Client() {
+        return new S3ClientBuilder()
+                .withEndpoint(System.getenv("CUSTOM_ENDPOINT_URL"))
+                .at(System.getenv("REGION"))
+                .build();
+    }
+
+    private static boolean metricsExists(S3Client s3Client, String filename) {
+        return S3.keysIn(s3Client, System.getenv("METRICS_BUCKET_ID"), "")
+                .anyMatch(s -> s.equals(filename));
+    }
+
+    private static String getFileMetrics(S3Client s3Client, String filename) {
+        return new S3Reader().read(S3.getObjectFrom(s3Client, System.getenv("METRICS_BUCKET_ID"), filename));
+    }
+
     private String getClassMetrics(String metrics, String className) {
         JsonArray classes = JsonParser.parseString(metrics).getAsJsonObject().get("classes").getAsJsonArray();
         for (int i = 0; i < classes.size(); i++) {
@@ -44,14 +64,5 @@ public class Service implements RequestHandler<APIGatewayProxyRequestEvent, APIG
             if (classObject.get("identifier").getAsString().equals(className)) return classObject.toString();
         }
         return "";
-    }
-
-    private static String getFileMetrics(S3Client s3Client, String filename) {
-        return new S3Reader().read(S3.getObjectFrom(s3Client, System.getenv("METRICS_BUCKET_ID"), filename));
-    }
-
-    private static boolean metricsExists(S3Client s3Client, String filename) {
-        return S3.keysIn(s3Client, System.getenv("METRICS_BUCKET_ID"), "")
-                .anyMatch(s -> s.equals(filename));
     }
 }
