@@ -109,12 +109,12 @@ resource "aws_s3_object" "upload_metrics_provider" {
 
 # --------------------- UPLOAD MODEL TO S3 ---------------------
 
-#resource "aws_s3_object" "model" {
-#  for_each = fileset("/gitradar/infra/model", "*")
-#  bucket = aws_s3_bucket.gitradar-models.bucket
-#  key    = "1706048794.7155528/${each.value}"
-#  source = "/gitradar/infra/model/${each.value}"
-#}
+resource "aws_s3_object" "model" {
+  for_each = fileset("/gitradar/infra/model", "*")
+  bucket = aws_s3_bucket.gitradar-models.bucket
+  key    = "1706048794.7155528/${each.value}"
+  source = "/gitradar/infra/model/${each.value}"
+}
 
 # --------------------- BUCKET POLICIES ---------------------
 
@@ -125,25 +125,25 @@ resource "aws_s3_bucket_notification" "bucket_notification_codefiles" {
 
 # --------------------- LAMBDA INVOKATION ---------------------
 
-#data "aws_lambda_invocation" "init_model_trainer" {
-#  function_name = aws_lambda_function.model_trainer.function_name
-#
-#    input = <<JSON
-#  {
-#    "Task": "SetUp"
-#  }
-#  JSON
-#}
-#
-#data "aws_lambda_invocation" "name_suggester_trainer" {
-#  function_name = aws_lambda_function.name_suggester.function_name
-#
-#    input = <<JSON
-#  {
-#    "Task": "SetUp"
-#  }
-#  JSON
-#}
+data "aws_lambda_invocation" "init_model_trainer" {
+  function_name = aws_lambda_function.model_trainer.function_name
+
+    input = <<JSON
+  {
+    "Task": "SetUp"
+  }
+  JSON
+}
+
+data "aws_lambda_invocation" "name_suggester_trainer" {
+  function_name = aws_lambda_function.name_suggester.function_name
+
+    input = <<JSON
+  {
+    "Task": "SetUp"
+  }
+  JSON
+}
 
 # --------------------- LAMBDA FUNCTIONS ---------------------
 
@@ -249,7 +249,7 @@ resource "aws_lambda_function" "model_trainer" {
     }
   }
   ephemeral_storage {
-    size = 10240 # Min 512 MB and the Max 10240 MB
+    size = 10240
   }
 }
 
@@ -269,7 +269,7 @@ resource "aws_lambda_function" "name_suggester" {
     }
   }
   ephemeral_storage {
-    size = 10240 # Min 512 MB and the Max 10240 MB
+    size = 10240
   }
 }
 
