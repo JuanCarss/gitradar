@@ -9,7 +9,8 @@ services:
       - 4510-4559:4510-4559
     environment:
       - LAMBDA_RUNTIME_ENVIRONMENT_TIMEOUT=900
-
     volumes:
       - ./config:/var/lib/localstack
       - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - host.docker.internal:host-gateway
