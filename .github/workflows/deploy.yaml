@@ -3,20 +3,26 @@ run-name: Deploy to ${{ github.repository }} by @${{ github.actor }}
 
 on:
   push:
-    branches: ["develop"] #TODO change to main/master for release
+    paths-ignore:
+      - 'README.md'
+    branches:
+      - "develop"
 
 jobs:
-  build_infrastructure:
+  build-infrastructure:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java 20
+      - name: Setup Java SDK
         uses: actions/setup-java@v4
         with:
           distribution: 'corretto'
-          java-version: '20' # for mvn clean package
+          java-version: '20'
+
+      - name: Set up Maven
+        run: sudo apt-get install -y maven
 
       - name: Pull docker images
         run: |
@@ -27,45 +33,47 @@ jobs:
         run: |
           cd infra/localstack
           docker-compose up -d
-      - name: Install tokenizer libraries
+
+      - name: Build Tokenizer
         run: |
-          pip install -r ./tokenizer/requirements.txt --target ./tokenizer
-      - name: Zip tokenizer
-      - run: |
           cd tokenizer
+          pip install -r requirements.txt --target .
           zip -r ../tokenizer.zip *
-      - name: Zip model trainer
+
+      - name: Build Model Trainer
       - run: |
           cd model_trainer
           zip -r ../model_trainer.zip *
-      - name: Zip name suggester
+
+      - name: Build Name Suggester
       - run: |
           cd name_suggester
           zip -r ../name_suggester.zip *
-      - name: Zip event writer
-      - run: |
-          cd infra/utils/event_writer
-          zip -r ../event_writer.zip *
-      - name: Zip event personalizer
-      - run: |
-          cd infra/utils/event_personalizer
-          zip -r ../event_personalizer.zip *
-      - name: Package parser
+
+      - name: Build Parser
       - run: |
           cd parser
           mvn clean package
-      - name: Package code metrics
+
+      - name: Build Code Metrics
       - run: |
           cd code_metrics
           mvn clean package
-      - name: Package metrics provider
+
+      - name: Build Metrics Provider
       - run: |
           cd metrics_provider
           mvn clean package
+
+      - name: Build Utils
+      - run: |
+          cd infra/utils/event_writer
+          zip -r ../event_writer.zip *
+          cd ../event_personalizer
+          zip -r ../event_personalizer.zip *
+
       - name: Deploy with Terraform
         run: |
           cd infra/terraform
           docker-compose run --rm terraform init
           docker-compose run --rm terraform apply --auto-approve
-
-    
