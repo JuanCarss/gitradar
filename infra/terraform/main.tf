@@ -7,30 +7,30 @@ provider "aws" {
   skip_metadata_api_check = true
   skip_requesting_account_id = true
   endpoints {
-    apigateway     = "http://host.docker.internal:4566"
-    apigatewayv2   = "http://host.docker.internal:4566"
-    cloudformation = "http://host.docker.internal:4566"
-    cloudwatch     = "http://host.docker.internal:4566"
-    dynamodb       = "http://host.docker.internal:4566"
-    ec2            = "http://host.docker.internal:4566"
-    es             = "http://host.docker.internal:4566"
-    elasticache    = "http://host.docker.internal:4566"
-    firehose       = "http://host.docker.internal:4566"
-    iam            = "http://host.docker.internal:4566"
-    kinesis        = "http://host.docker.internal:4566"
-    lambda         = "http://host.docker.internal:4566"
-    rds            = "http://host.docker.internal:4566"
-    redshift       = "http://host.docker.internal:4566"
-    route53        = "http://host.docker.internal:4566"
-    s3             = "http://host.docker.internal:4566"
-    secretsmanager = "http://host.docker.internal:4566"
-    ses            = "http://host.docker.internal:4566"
-    sns            = "http://host.docker.internal:4566"
-    sqs            = "http://host.docker.internal:4566"
-    ssm            = "http://host.docker.internal:4566"
-    stepfunctions  = "http://host.docker.internal:4566"
-    sts            = "http://host.docker.internal:4566"
-    eventbridge    = "http://host.docker.internal:4566"
+    apigateway     = "http://172.17.0.1:4566"
+    apigatewayv2   = "http://172.17.0.1:4566"
+    cloudformation = "http://172.17.0.1:4566"
+    cloudwatch     = "http://172.17.0.1:4566"
+    dynamodb       = "http://172.17.0.1:4566"
+    ec2            = "http://172.17.0.1:4566"
+    es             = "http://172.17.0.1:4566"
+    elasticache    = "http://172.17.0.1:4566"
+    firehose       = "http://172.17.0.1:4566"
+    iam            = "http://172.17.0.1:4566"
+    kinesis        = "http://172.17.0.1:4566"
+    lambda         = "http://172.17.0.1:4566"
+    rds            = "http://172.17.0.1:4566"
+    redshift       = "http://172.17.0.1:4566"
+    route53        = "http://172.17.0.1:4566"
+    s3             = "http://172.17.0.1:4566"
+    secretsmanager = "http://172.17.0.1:4566"
+    ses            = "http://172.17.0.1:4566"
+    sns            = "http://172.17.0.1:4566"
+    sqs            = "http://172.17.0.1:4566"
+    ssm            = "http://172.17.0.1:4566"
+    stepfunctions  = "http://172.17.0.1:4566"
+    sts            = "http://172.17.0.1:4566"
+    eventbridge    = "http://172.17.0.1:4566"
   }
 }
 
@@ -158,7 +158,7 @@ resource "aws_lambda_function" "parser" {
   environment {
     variables = {
       CODEFILES_BUCKET_ID = aws_s3_bucket.gitradar-codefiles.id,
-      CUSTOM_ENDPOINT_URL = "http://host.docker.internal:4566",
+      CUSTOM_ENDPOINT_URL = "http://172.17.0.1:4566",
       REGION = "us-east-1",
       DYNAMODB_TABLE_NAME = aws_dynamodb_table.semantic_tokens.name
     }
@@ -176,7 +176,7 @@ resource "aws_lambda_function" "tokenizer" {
   environment {
     variables = {
       CODEFILES_BUCKET_ID = aws_s3_bucket.gitradar-codefiles.id,
-      CUSTOM_ENDPOINT_URL = "http://host.docker.internal:4566",
+      CUSTOM_ENDPOINT_URL = "http://172.17.0.1:4566",
       DYNAMODB_TABLE_NAME = aws_dynamodb_table.token_bytes.name
     }
   }
@@ -194,7 +194,7 @@ resource "aws_lambda_function" "event_writer" {
   environment {
     variables = {
       EVENTS_BUCKET_ID = aws_s3_bucket.gitradar-events.id,
-      CUSTOM_ENDPOINT_URL = "http://host.docker.internal:4566"
+      CUSTOM_ENDPOINT_URL = "http://172.17.0.1:4566"
     }
   }
 }
@@ -209,7 +209,7 @@ resource "aws_lambda_function" "event_personalizer" {
   timeout       = 60
   environment {
     variables = {
-      CUSTOM_ENDPOINT_URL = "http://host.docker.internal:4566"
+      CUSTOM_ENDPOINT_URL = "http://172.17.0.1:4566"
     }
   }
 }
@@ -225,7 +225,7 @@ resource "aws_lambda_function" "code_metrics" {
   environment {
     variables = {
       METRICS_BUCKET_ID = aws_s3_bucket.gitradar-metrics.id,
-      CUSTOM_ENDPOINT_URL = "http://host.docker.internal:4566",
+      CUSTOM_ENDPOINT_URL = "http://172.17.0.1:4566",
       DYNAMODB_TABLE_NAME = aws_dynamodb_table.semantic_tokens.name
       REGION = "us-east-1"
     }
@@ -243,7 +243,7 @@ resource "aws_lambda_function" "model_trainer" {
   reserved_concurrent_executions = 1
   environment {
     variables = {
-      CUSTOM_ENDPOINT_URL = "http://host.docker.internal:4566",
+      CUSTOM_ENDPOINT_URL = "http://172.17.0.1:4566",
       MODELS_BUCKET_ID  = aws_s3_bucket.gitradar-models.id,
       DYNAMODB_TABLE_NAME = aws_dynamodb_table.token_bytes.name
     }
@@ -264,7 +264,7 @@ resource "aws_lambda_function" "name_suggester" {
   reserved_concurrent_executions = 1
   environment {
     variables = {
-      CUSTOM_ENDPOINT_URL = "http://host.docker.internal:4566",
+      CUSTOM_ENDPOINT_URL = "http://172.17.0.1:4566",
       MODELS_BUCKET_ID  = aws_s3_bucket.gitradar-models.id
     }
   }
@@ -284,7 +284,7 @@ resource "aws_lambda_function" "metrics_provider" {
     environment {
       variables = {
         METRICS_BUCKET_ID = aws_s3_bucket.gitradar-metrics.id,
-        CUSTOM_ENDPOINT_URL = "http://host.docker.internal:4566",
+        CUSTOM_ENDPOINT_URL = "http://172.17.0.1:4566",
         REGION = "us-east-1"
       }
     }
