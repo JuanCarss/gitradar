@@ -12,9 +12,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Java 20
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '20' # for mvn clean package
+
+      - name: Pull docker images
+        run: |
+          docker pull hashicorp/terraform:latest
+          docker pull localstack/localstack:latest
+
       - name: Start LocalStack
         run: |
-          docker pull localstack/localstack:latest
           cd infra/localstack
           docker-compose up -d
       - name: Install tokenizer libraries
@@ -32,21 +42,28 @@ jobs:
       - run: |
           cd name_suggester
           zip -r ../name_suggester.zip *
+      - name: Zip event writer
+      - run: |
+          cd infra/utils/event_writer
+          zip -r ../event_writer.zip *
+      - name: Zip event personalizer
+      - run: |
+          cd infra/utils/event_personalizer
+          zip -r ../event_personalizer.zip *
       - name: Package parser
       - run: |
           cd parser
-          mvn -B "parser-1.0-SNAPSHOT.jar" --file pom.xml
+          mvn clean package
       - name: Package code metrics
       - run: |
           cd code_metrics
-          mvn -B "code_metrics-1.0-SNAPSHOT.jar" --file pom.xml
+          mvn clean package
       - name: Package metrics provider
       - run: |
           cd metrics_provider
-          mvn -B "metrics_provider-1.0-SNAPSHOT.jar" --file pom.xml
-      - name: Deploy on Terraform
+          mvn clean package
+      - name: Deploy with Terraform
         run: |
-          docker pull hashicorp/terraform:latest
           cd infra/terraform
           docker-compose run --rm terraform init
           docker-compose run --rm terraform apply --auto-approve
