@@ -41,32 +41,32 @@ jobs:
           zip -r ../tokenizer.zip *
 
       - name: Build Model Trainer
-      - run: |
+        run: |
           cd model_trainer
           zip -r ../model_trainer.zip *
 
       - name: Build Name Suggester
-      - run: |
+        run: |
           cd name_suggester
           zip -r ../name_suggester.zip *
 
       - name: Build Parser
-      - run: |
+        run: |
           cd parser
           mvn clean package
 
       - name: Build Code Metrics
-      - run: |
+        run: |
           cd code_metrics
           mvn clean package
 
       - name: Build Metrics Provider
-      - run: |
+        run: |
           cd metrics_provider
           mvn clean package
 
       - name: Build Utils
-      - run: |
+        run: |
           cd infra/utils/event_writer
           zip -r ../event_writer.zip *
           cd ../event_personalizer
