@@ -21,10 +21,10 @@ jobs:
           distribution: 'corretto'
           java-version: '20'
 
-      - name: Set up Maven
+      - name: Set Up Maven
         run: sudo apt-get install -y maven
 
-      - name: Pull docker images
+      - name: Pull Docker Images
         run: |
           docker pull hashicorp/terraform:latest
           docker pull localstack/localstack:latest
