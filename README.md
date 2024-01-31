@@ -8,6 +8,7 @@ Welcome to the GitRadar project repository! This project leverages Docker contai
 <div style="text-align:center">
 <img alt="Coding" width="800" src="app.jpg">
 </div>
+
 ## Tools Used
 
 ### Docker
@@ -53,7 +54,7 @@ Responds to an API Gateway in order to predict the name of a method sent as a pa
 ### Services Initialization
 Python 3.9 is required to install the packages from the requirements.txt of the Tokenizer Service directly into the tokenizer folder. Then, all the python services individually should be packaged into a zip and the java services must be packaged with maven. Additionally, the terraform endpoints at the Main.tf file should be changed to your operating system, "http://host.docker.internal:4566/" in Windows/OS X and "http://172.17.0.1:4566/"  in Linux systems.
 
-### Infraestructure Launch
+### Infrastructure Build
 
 #### Localstack
 Within its folder (infra/localstack) launch the docker compose file:
@@ -61,7 +62,7 @@ docker-compose run -d
 
 #### Terraform
 
-Within its folder (infra/terraform) launch the compose file with the init command followed by another launch of the compose file with the apply command to build the infrastructure:
+Within terraform folder (infra/terraform) launch the compose file with the init command followed by another launch of the compose file with the apply command to build the infrastructure:
 docker-compose run --rm terraform init
 docker-compose run --rm terraform apply --auto-approve
 
